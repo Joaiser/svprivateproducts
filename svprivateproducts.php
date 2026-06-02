@@ -689,19 +689,23 @@ class SvPrivateProducts extends Module
         }
 
         $phpSelf = property_exists($controller, 'php_self') ? (string) $controller->php_self : '';
-        $idRequestProduct = $this->getRequestProductId($controller);
+        $requestController = (string) Tools::getValue('controller');
+        $isProductController = $phpSelf === 'product'
+            || $requestController === 'product'
+            || $controller instanceof ProductController;
+        $idRequestProduct = $isProductController ? $this->getRequestProductId($controller) : 0;
         $this->trace('front_controller_access_probe', [
             'controller' => get_class($controller),
             'php_self' => $phpSelf,
             'customer_logged' => ($this->context->customer && $this->context->customer->isLogged()) ? 1 : 0,
             'customer' => $this->getContextCustomerId(),
             'request_product' => $idRequestProduct,
-            'request_controller' => (string) Tools::getValue('controller'),
+            'request_controller' => $requestController,
             'request_uri' => isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '',
         ]);
 
         // Product page protection.
-        if ($phpSelf === 'product' || $idRequestProduct > 0) {
+        if ($isProductController && $idRequestProduct > 0) {
             $this->checkProductAccess($idRequestProduct, 'product_view_access_check');
         }
 
@@ -1139,13 +1143,23 @@ class SvPrivateProducts extends Module
             return $idProduct;
         }
 
-        if (is_object($controller)) {
-            if (property_exists($controller, 'id_product') && (int) $controller->id_product > 0) {
-                return (int) $controller->id_product;
-            }
+        if (!is_object($controller)) {
+            return 0;
+        }
 
-            if (property_exists($controller, 'product') && is_object($controller->product) && !empty($controller->product->id)) {
-                return (int) $controller->product->id;
+        $publicVars = get_object_vars($controller);
+        if (isset($publicVars['id_product']) && (int) $publicVars['id_product'] > 0) {
+            return (int) $publicVars['id_product'];
+        }
+
+        if (isset($publicVars['product']) && is_object($publicVars['product']) && !empty($publicVars['product']->id)) {
+            return (int) $publicVars['product']->id;
+        }
+
+        if (is_callable([$controller, 'getProduct'])) {
+            $product = $controller->getProduct();
+            if (is_object($product) && !empty($product->id)) {
+                return (int) $product->id;
             }
         }
 

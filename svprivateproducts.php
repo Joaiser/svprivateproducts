@@ -21,7 +21,7 @@ class SvPrivateProducts extends Module
     {
         $this->name = 'svprivateproducts';
         $this->tab = 'administration';
-        $this->version = '1.0.1';
+        $this->version = '1.0.2';
         $this->author = 'Aitor';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -124,23 +124,6 @@ class SvPrivateProducts extends Module
         // AJAX endpoints for back office autocompletes.
         if ((int) Tools::getValue('ajax') === 1) {
             $this->handleAdminAjax();
-        }
-
-        // Ensure assets are loaded even if the module was installed before we registered displayBackOfficeHeader.
-        if ($this->context->controller && is_object($this->context->controller)) {
-            $this->context->controller->addJS($this->_path . 'views/js/admin-autocomplete.js');
-            $this->context->controller->addCSS($this->_path . 'views/css/admin-autocomplete.css');
-
-            Media::addJsDef([
-                'svppAdminAjaxUrl' => AdminController::$currentIndex . '&configure=' . $this->name . '&token=' . Tools::getAdminTokenLite('AdminModules'),
-                'svppTrace' => $this->isTraceEnabled() ? 1 : 0,
-            ]);
-
-            $this->trace('bo_assets_injected', [
-                'js' => $this->_path . 'views/js/admin-autocomplete.js',
-                'css' => $this->_path . 'views/css/admin-autocomplete.css',
-                'ajaxUrl' => AdminController::$currentIndex . '&configure=' . $this->name . '&token=' . Tools::getAdminTokenLite('AdminModules'),
-            ]);
         }
 
         $out = '';
@@ -753,21 +736,13 @@ class SvPrivateProducts extends Module
 
     public function hookDisplayBackOfficeHeader()
     {
-        // Only load assets on this module configuration page.
+        // Assets are loaded inline from renderUnifiedUi() with an explicit cache-busting version.
         if ((string) Tools::getValue('configure') !== $this->name) {
             return;
         }
 
         $this->trace('bo_header_hook', [
             'controller' => is_object($this->context->controller) ? get_class($this->context->controller) : 'none',
-        ]);
-
-        $this->context->controller->addJS($this->_path . 'views/js/admin-autocomplete.js');
-        $this->context->controller->addCSS($this->_path . 'views/css/admin-autocomplete.css');
-
-        Media::addJsDef([
-            'svppAdminAjaxUrl' => AdminController::$currentIndex . '&configure=' . $this->name . '&token=' . Tools::getAdminTokenLite('AdminModules'),
-            'svppTrace' => $this->isTraceEnabled() ? 1 : 0,
         ]);
     }
 

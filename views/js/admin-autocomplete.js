@@ -7,7 +7,7 @@
       try {
         return fn.apply(this, arguments);
       } catch (e) {
-        if (window.console && console.error) console.error('[svprivateproducts] autocomplete error', e);
+        if (window.svppTrace === 1 && window.console && console.error) console.error('[svprivateproducts] autocomplete error', e);
       }
     };
   }
@@ -79,12 +79,12 @@
 
       var source = opts.source || opts.action;
       var url = window.svppAdminAjaxUrl + '&ajax=1&action=' + encodeURIComponent(opts.action) + '&q=' + encodeURIComponent(q) + '&source=' + encodeURIComponent(source);
-      if (window.console && console.debug) {
+      if (window.svppTrace === 1 && window.console && console.debug) {
         console.debug('[svprivateproducts] fetch', opts.action, source, q, url);
       }
       return fetch(url, { signal: abort.signal, credentials: 'same-origin' })
         .then(function (r) {
-          if (window.console && console.debug) {
+          if (window.svppTrace === 1 && window.console && console.debug) {
             console.debug('[svprivateproducts] resp', opts.action, source, r.status, r.headers.get('content-type'));
           }
           var ct = (r.headers.get('content-type') || '').toLowerCase();
@@ -96,7 +96,7 @@
           });
         })
         .then(function (j) {
-          if (window.console && console.debug) {
+          if (window.svppTrace === 1 && window.console && console.debug) {
             console.debug('[svprivateproducts] json', opts.action, source, j);
           }
           render(j && j.items ? j.items : []);
@@ -106,7 +106,7 @@
           if (e && (e.name === 'AbortError' || String(e.message || '').indexOf('aborted') !== -1)) {
             return;
           }
-          if (window.console && console.error) {
+          if (window.svppTrace === 1 && window.console && console.error) {
             console.error('[svprivateproducts] fetch error', opts.action, source, e);
           }
         });
@@ -141,7 +141,7 @@
   }
 
   function init() {
-    if (window.console && console.debug) {
+    if (window.svppTrace === 1 && window.console && console.debug) {
       console.debug('[svprivateproducts] admin autocomplete init', {
         ajaxUrl: window.svppAdminAjaxUrl,
         trace: window.svppTrace,

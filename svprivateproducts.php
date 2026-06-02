@@ -415,7 +415,7 @@ class SvPrivateProducts extends Module
         $html .= '<script type="text/javascript">'
             . 'window.svppAdminAjaxUrl=' . json_encode($action) . ';'
             . 'window.svppTrace=' . json_encode($this->isTraceEnabled() ? 1 : 0) . ';'
-            . 'console.debug("[svprivateproducts] inline boot",{ajaxUrl:window.svppAdminAjaxUrl,trace:window.svppTrace});'
+            . 'if(window.svppTrace===1&&window.console&&console.debug){console.debug("[svprivateproducts] inline boot",{ajaxUrl:window.svppAdminAjaxUrl,trace:window.svppTrace});}'
             . '</script>';
         $html .= '<script type="text/javascript" src="' . htmlspecialchars($this->_path . 'views/js/admin-autocomplete.js?v=' . rawurlencode($assetBust), ENT_QUOTES, 'UTF-8') . '"></script>';
 
@@ -991,11 +991,7 @@ class SvPrivateProducts extends Module
 
     private function isTraceEnabled(): bool
     {
-        // Enable via module setting OR temporary URL flag for troubleshooting.
-        if ((int) Configuration::get(self::CFG_DEBUG) === 1) {
-            return true;
-        }
-        return (int) Tools::getValue('svpp_trace') === 1;
+        return (int) Configuration::get(self::CFG_DEBUG) === 1;
     }
 
     private function trace(string $event, array $ctx = []): void
